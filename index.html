@@ -67,6 +67,10 @@
     border-color:var(--neon);background:rgba(10,26,22,.9);
     box-shadow:0 0 0 1px var(--neon),0 0 24px rgba(0,255,170,.35);
   }
+  input.exact-ready {
+    border-color:var(--neon-2);
+    box-shadow:0 0 0 1px var(--neon-2), 0 0 18px rgba(0,212,255,.35);
+  }
   button {
     padding:0 18px;min-height:48px;border-radius:8px;border:1px solid var(--neon);
     background:transparent;color:var(--neon);font-weight:700;font-size:13px;
@@ -168,8 +172,9 @@ const $status = document.getElementById('status');
 const $btn = document.getElementById('btn');
 const $form = document.getElementById('form');
 
-const MIN_PREFIX = 3;
-const PAGE_SIZE = 100;
+const MIN_PREFIX = 3;      // minimum prefix for prefix search
+const FULL_LEN   = 11;     // BD mobile full length (exact lookup)
+const PAGE_SIZE  = 100;
 
 // Your actual Site Key
 const TURNSTILE_SITE_KEY = '0x4AAAAAAFsXi1h2M35slh8X';
@@ -177,7 +182,7 @@ const TURNSTILE_SITE_KEY = '0x4AAAAAAFsXi1h2M35slh8X';
 /* ---------- Turnstile state ---------- */
 let turnstileWidgetId = null;
 let turnstileToken = '';
-let captchaResolve = null;   // pending promise resolver while captcha is running
+let captchaResolve = null;
 
 /* ---------- search state ---------- */
 let dbTotal = 0;
@@ -234,7 +239,6 @@ function getCaptchaToken() {
   return new Promise((resolve) => {
     if (!turnstileWidgetId) { resolve(null); return; }
 
-    // safety timeout
     let done = false;
     const finish = (val) => {
       if (done) return;
@@ -244,7 +248,7 @@ function getCaptchaToken() {
     };
     captchaResolve = finish;
 
-    setTimeout(() => finish(null), 20000); // 20s guard
+    setTimeout(() => finish(null), 20000);
 
     try { turnstile.reset(turnstileWidgetId); } catch (_) {}
     try { turnstile.execute(turnstileWidgetId); } catch (_) { finish(null); }
@@ -285,6 +289,10 @@ function escapeHtml(s) {
   }[c]));
 }
 
+function isFullNumber(s) {
+  return s.length === FULL_LEN;  // 11 digits → exact lookup
+}
+
 function highlight(num, prefix) {
   const s = String(num == null ? '' : num);
   if (prefix && s.startsWith(prefix)) {
@@ -308,6 +316,8 @@ async function loadPage(isFirst, retryCount = 0) {
   if (loading) return;
   if (!isFirst && currentOffset >= currentTotalMatches) return;
 
+  const full = isFullNumber(currentQuery);
+
   loading = true;
   $btn.disabled = true;
 
@@ -318,12 +328,14 @@ async function loadPage(isFirst, retryCount = 0) {
     currentOffset = 0;
     currentTotalMatches = 0;
     moreAvailable = false;
-    setStatus('scanning…', '');
+    setStatus(full ? 'looking up…' : 'scanning…', '');
   }
 
   const loadEl = document.createElement('div');
   loadEl.className = 'loading';
-  loadEl.textContent = (isFirst && retryCount === 0) ? 'scanning' : 'loading more';
+  loadEl.textContent = (isFirst && retryCount === 0)
+    ? (full ? 'looking up' : 'scanning')
+    : 'loading more';
   $out.insertBefore(loadEl, sentinel);
 
   if (inFlight) inFlight.abort();
@@ -346,7 +358,6 @@ async function loadPage(isFirst, retryCount = 0) {
     const rawText = await res.text();
 
     if (!res.ok) {
-      // Token expired → refresh captcha and retry once
       if (res.status === 403 && retryCount < 1) {
         setStatus('refreshing captcha…', '');
         const fresh = await getCaptchaToken();
@@ -357,9 +368,7 @@ async function loadPage(isFirst, retryCount = 0) {
           $btn.disabled = false;
           return loadPage(isFirst, retryCount + 1);
         }
-        // refresh failed — fall through to normal error handling
       }
-
       setStatus('HTTP ' + res.status, 'err');
       if (isFirst) {
         $out.insertAdjacentHTML('afterbegin', '<div class="error"><pre>' + escapeHtml(rawText.slice(0, 800)) + '</pre></div>');
@@ -388,8 +397,14 @@ async function loadPage(isFirst, retryCount = 0) {
     }));
 
     if (isFirst && retryCount === 0 && !hits.length) {
-      setStatus('no match', 'err');
-      $out.insertAdjacentHTML('afterbegin', '<div class="empty">এই prefix-এ কোনো রেকর্ড পাওয়া যায়নি।</div>');
+      setStatus(full ? ('no record for ' + currentQuery) : 'no match', 'err');
+      $out.insertAdjacentHTML('afterbegin',
+        '<div class="empty">' +
+        (full
+          ? 'এই নম্বরের কোনো রেকর্ড পাওয়া যায়নি।'
+          : 'এই prefix-এ কোনো রেকর্ড পাওয়া যায়নি।') +
+        '</div>'
+      );
       return;
     }
 
@@ -399,13 +414,24 @@ async function loadPage(isFirst, retryCount = 0) {
     currentOffset += hits.length;
     moreAvailable = currentOffset < currentTotalMatches;
 
-    setStatus(
-      currentTotalMatches.toLocaleString() + ' match' +
-      (currentTotalMatches === 1 ? '' : 'es') +
-      ' · showing ' + currentOffset.toLocaleString() +
-      ' · "' + currentQuery + '"',
-      'ok'
-    );
+    /* ---------- context-aware status ---------- */
+    if (full) {
+      if (currentTotalMatches === 1) {
+        setStatus('exact match · ' + currentQuery, 'ok');
+      } else if (currentTotalMatches > 1) {
+        setStatus(currentTotalMatches.toLocaleString() + ' matches · ' + currentQuery, 'ok');
+      } else {
+        setStatus('no record for ' + currentQuery, 'err');
+      }
+    } else {
+      setStatus(
+        currentTotalMatches.toLocaleString() + ' match' +
+        (currentTotalMatches === 1 ? '' : 'es') +
+        ' · showing ' + currentOffset.toLocaleString() +
+        ' · "' + currentQuery + '"',
+        'ok'
+      );
+    }
 
   } catch (e) {
     if (e.name === 'AbortError') return;
@@ -468,9 +494,10 @@ async function requestScan() {
 
 $form.addEventListener('submit', e => { e.preventDefault(); requestScan(); });
 
-// Digits only — no auto-search
+// Digits only + subtle hint styling for full numbers
 $q.addEventListener('input', () => {
   $q.value = $q.value.replace(/\D/g, '').slice(0, 20);
+  $q.classList.toggle('exact-ready', isFullNumber($q.value));
 });
 
 idleStatus();
