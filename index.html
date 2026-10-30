@@ -2,137 +2,452 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Lookup</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#05070a" />
+<title>VOID // LOOKUP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Bengali:wght@400;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f1115;
-    --panel: #171a21;
-    --line: #262b35;
-    --text: #e6e9ef;
-    --muted: #8b92a1;
-    --accent: #4f8cff;
+    --bg: #05070a;
+    --bg-2: #0a0e14;
+    --panel: rgba(10, 20, 28, 0.72);
+    --line: rgba(0, 255, 170, 0.14);
+    --line-strong: rgba(0, 255, 170, 0.4);
+    --text: #d6f5e8;
+    --muted: #5d7c74;
+    --neon: #00ffaa;
+    --neon-2: #00d4ff;
+    --warn: #ff5470;
+    --shadow: 0 0 24px rgba(0, 255, 170, 0.18);
   }
-  * { box-sizing: border-box; }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
   body {
     margin: 0;
-    min-height: 100dvh;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans Bengali", Roboto, sans-serif;
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     background: var(--bg);
     color: var(--text);
-    display: flex;
-    justify-content: center;
-    padding: 24px 16px 64px;
+    min-height: 100dvh;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
   }
-  .wrap { width: 100%; max-width: 520px; }
-  h1 { font-size: 18px; font-weight: 600; margin: 8px 0 6px; letter-spacing: 0.2px; }
-  .sub { color: var(--muted); font-size: 13px; margin: 0 0 20px; }
-  .search { display: flex; gap: 8px; margin-bottom: 20px; }
+
+  /* grid backdrop */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0, 255, 170, 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 255, 170, 0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+    pointer-events: none;
+    z-index: 0;
+    mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 85%);
+  }
+  /* scanlines */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255, 255, 255, 0.018) 0px,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    pointer-events: none;
+    z-index: 2;
+    mix-blend-mode: overlay;
+  }
+
+  .shell {
+    position: relative;
+    z-index: 3;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: clamp(24px, 6vw, 56px) 18px 80px;
+  }
+
+  /* header */
+  .hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+  .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--neon);
+    box-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .title {
+    font-size: clamp(18px, 4.4vw, 22px);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--text);
+    text-transform: uppercase;
+  }
+  .title .accent { color: var(--neon); text-shadow: 0 0 14px rgba(0, 255, 170, 0.55); }
+
+  .tagline {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: "Noto Sans Bengali", "JetBrains Mono", sans-serif;
+  }
+  .cursor {
+    display: inline-block;
+    width: 8px;
+    height: 14px;
+    background: var(--neon);
+    animation: blink 1.05s steps(1) infinite;
+    box-shadow: 0 0 10px var(--neon);
+    vertical-align: middle;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* input bar */
+  .search {
+    position: relative;
+    display: flex;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+  .search::before {
+    content: "> ";
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--neon);
+    font-weight: 700;
+    z-index: 1;
+    text-shadow: 0 0 8px var(--neon);
+  }
   input {
     flex: 1;
-    padding: 14px 16px;
-    border-radius: 10px;
-    border: 1px solid var(--line);
+    padding: 16px 16px 16px 40px;
+    border-radius: 8px;
+    border: 1px solid var(--line-strong);
     background: var(--panel);
     color: var(--text);
     font-size: 16px;
+    font-family: inherit;
+    letter-spacing: 0.04em;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  input::placeholder { color: #3d534d; }
+  input:focus {
+    border-color: var(--neon);
+    background: rgba(10, 26, 22, 0.9);
+    box-shadow: 0 0 0 1px var(--neon), 0 0 24px rgba(0, 255, 170, 0.35);
+  }
+  button {
+    padding: 0 22px;
+    min-height: 54px;
+    border-radius: 8px;
+    border: 1px solid var(--neon);
+    background: transparent;
+    color: var(--neon);
+    font-weight: 700;
+    font-size: 14px;
+    font-family: inherit;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-shadow: 0 0 8px rgba(0, 255, 170, 0.6);
+  }
+  button:hover, button:focus-visible {
+    background: rgba(0, 255, 170, 0.1);
+    box-shadow: 0 0 18px rgba(0, 255, 170, 0.5), inset 0 0 18px rgba(0, 255, 170, 0.08);
     outline: none;
   }
-  input:focus { border-color: var(--accent); }
-  button {
-    padding: 14px 18px;
-    border-radius: 10px;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    font-weight: 600;
-    font-size: 15px;
-    cursor: pointer;
-  }
   button:active { transform: translateY(1px); }
-  .result {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 6px 16px;
-    margin-bottom: 12px;
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* status strip */
+  .status {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 0.06em;
+    margin-bottom: 16px;
+    min-height: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
+  .status.ok { color: var(--neon); }
+  .status.err { color: var(--warn); }
+  .status .pill {
+    display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 8px currentColor;
+  }
+
+  /* results */
+  #out { display: flex; flex-direction: column; gap: 12px; }
+
+  .card {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    padding: 4px 18px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(0, 255, 170, 0.08);
+    overflow: hidden;
+    animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--neon), transparent);
+    opacity: 0.7;
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .card:nth-child(1) { animation-delay: 0.02s; }
+  .card:nth-child(2) { animation-delay: 0.08s; }
+  .card:nth-child(3) { animation-delay: 0.14s; }
+  .card:nth-child(4) { animation-delay: 0.20s; }
+  .card:nth-child(5) { animation-delay: 0.26s; }
+
   .row {
     display: flex;
     justify-content: space-between;
-    padding: 12px 0;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 0;
     border-bottom: 1px dashed var(--line);
-    font-size: 15px;
-  }
-  .row:last-child { border-bottom: none; }
-  .label { color: var(--muted); }
-  .val { font-variant-numeric: tabular-nums; }
-  .empty, .error {
-    padding: 16px;
-    border-radius: 10px;
-    background: var(--panel);
-    border: 1px solid var(--line);
-    color: var(--muted);
     font-size: 14px;
   }
-  .error { color: #ff8b8b; }
+  .row:last-child { border-bottom: none; }
+  .label {
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .val {
+    color: var(--text);
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-align: right;
+    word-break: break-all;
+    font-variant-numeric: tabular-nums;
+  }
+  .val.nid { color: var(--neon-2); text-shadow: 0 0 10px rgba(0, 212, 255, 0.4); }
+  .val.dob { color: var(--neon); text-shadow: 0 0 10px rgba(0, 255, 170, 0.35); }
+
+  .empty, .error {
+    padding: 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    letter-spacing: 0.03em;
+    font-family: "Noto Sans Bengali", "JetBrains Mono", sans-serif;
+  }
+  .empty { color: var(--muted); }
+  .empty::before { content: "// "; color: var(--neon); font-family: "JetBrains Mono", monospace; }
+  .error {
+    color: var(--warn);
+    border-color: rgba(255, 84, 112, 0.4);
+  }
+  .error::before { content: "!! "; font-weight: 700; }
+
+  /* glow footer */
+  .foot {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--neon), transparent);
+    opacity: 0.5;
+    z-index: 3;
+  }
+
+  /* small screens */
+  @media (max-width: 480px) {
+    .search { flex-direction: column; }
+    .search::before { top: 27px; }
+    button { width: 100%; min-height: 48px; }
+    .row { padding: 12px 0; font-size: 13px; }
+  }
+
+  /* reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Number Lookup</h1>
-  <p class="sub">মোবাইল নাম্বার লিখে সার্চ করুন</p>
+<div class="shell">
+  <div class="hdr">
+    <span class="dot"></span>
+    <span class="title">VOID<span class="accent">//</span>LOOKUP</span>
+  </div>
+  <div class="tagline">
+    <span>query the archive</span>
+    <span class="cursor"></span>
+  </div>
 
-  <form class="search" onsubmit="event.preventDefault(); runSearch();">
-    <input id="q" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" autocomplete="off" />
-    <button type="submit">Search</button>
+  <form class="search" id="form" autocomplete="off">
+    <input id="q" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" maxlength="20" aria-label="Phone number" />
+    <button type="submit" id="btn">SCAN</button>
   </form>
 
+  <div class="status" id="status"></div>
   <div id="out"></div>
 </div>
+<div class="foot"></div>
 
 <script>
-let DB = null;
+const $q = document.getElementById('q');
+const $out = document.getElementById('out');
+const $status = document.getElementById('status');
+const $btn = document.getElementById('btn');
+const $form = document.getElementById('form');
 
-function stripTrailingCommas(s) {
-  return s.replace(/,\s*(?=[}\]])/g, '');
-}
+let DB = [];
+let loadPromise = null;
 
-async function loadDB() {
-  const out = document.getElementById('out');
+/* ---------- parser: survives trailing commas, missing commas, truncation ---------- */
+function parseLoose(raw) {
+  raw = String(raw)
+    .replace(/^\uFEFF/, '')
+    .replace(/^\s*\[file content begin\]\s*/i, '')
+    .replace(/\s*\[file content end\]\s*$/i, '')
+    .trim();
+
+  // fast path
   try {
-    const res = await fetch('./data.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('data.json load failed (' + res.status + ')');
-    const raw = await res.text();
-    DB = JSON.parse(stripTrailingCommas(raw));
-    if (!Array.isArray(DB)) throw new Error('data.json is not an array');
-    return true;
-  } catch (e) {
-    out.innerHTML = '<div class="error">' + escapeHtml(e.message) + '</div>';
-    return false;
+    const v = JSON.parse(raw);
+    if (Array.isArray(v)) return v.filter(r => r && r.number);
+  } catch (_) {}
+
+  // strip trailing commas
+  const cleaned = raw.replace(/,\s*(?=[}\]])/g, '');
+  try {
+    const v = JSON.parse(cleaned);
+    if (Array.isArray(v)) return v.filter(r => r && r.number);
+  } catch (_) {}
+
+  // per-object rescue
+  const out = [];
+  let i = 0;
+  const n = raw.length;
+  while (i < n) {
+    if (raw[i] !== '{') { i++; continue; }
+    let depth = 0, j = i, inStr = false, esc = false;
+    for (; j < n; j++) {
+      const c = raw[j];
+      if (inStr) {
+        if (esc) esc = false;
+        else if (c === '\\') esc = true;
+        else if (c === '"') inStr = false;
+      } else {
+        if (c === '"') inStr = true;
+        else if (c === '{') depth++;
+        else if (c === '}') { depth--; if (depth === 0) break; }
+      }
+    }
+    if (depth !== 0) break;
+    const block = raw.slice(i, j + 1).replace(/,\s*}/g, '}');
+    try {
+      const obj = JSON.parse(block);
+      if (obj && obj.number) out.push(obj);
+    } catch (_) {}
+    i = j + 1;
   }
+  return out;
 }
 
+/* ---------- loader ---------- */
+function loadDB() {
+  if (loadPromise) return loadPromise;
+  loadPromise = (async () => {
+    setStatus('loading data.json…', '');
+    try {
+      const res = await fetch('./data.json', { cache: 'no-store' });
+      if (!res.ok) throw new Error('fetch ' + res.status);
+      const raw = await res.text();
+      DB = parseLoose(raw);
+      if (!DB.length) {
+        setStatus('data.json empty or unparseable', 'err');
+        return;
+      }
+      setStatus(DB.length.toLocaleString() + ' records indexed', 'ok');
+    } catch (e) {
+      setStatus('load error: ' + e.message, 'err');
+    }
+  })();
+  return loadPromise;
+}
+
+function setStatus(text, cls) {
+  $status.className = 'status ' + (cls || '');
+  $status.innerHTML = '<span class="pill"></span><span>' + escapeHtml(text) + '</span>';
+}
+
+/* ---------- search ---------- */
 async function runSearch() {
-  const out = document.getElementById('out');
-  const q = document.getElementById('q').value.trim();
-  if (!q) { out.innerHTML = ''; return; }
-  if (!DB) {
-    const ok = await loadDB();
-    if (!ok) return;
-  }
-  const hits = DB.filter(r => r && String(r.number) === q);
-  if (hits.length === 0) {
-    out.innerHTML = '<div class="empty">এই নাম্বারে কোনো রেকর্ড পাওয়া যায়নি।</div>';
+  const q = $q.value.trim();
+  $out.innerHTML = '';
+  if (!q) { setStatus('enter a number', ''); return; }
+
+  $btn.disabled = true;
+  if (!DB.length) await loadDB();
+
+  if (!DB.length) { $btn.disabled = false; return; }
+
+  const hits = DB.filter(r => String(r.number) === q);
+
+  if (!hits.length) {
+    setStatus('no match', 'err');
+    $out.innerHTML = '<div class="empty">এই নাম্বারে কোনো রেকর্ড পাওয়া যায়নি।</div>';
+    $btn.disabled = false;
     return;
   }
-  out.innerHTML = hits.map(r => `
-    <div class="result">
-      <div class="row"><span class="label">Number</span><span class="val">${escapeHtml(r.number)}</span></div>
-      <div class="row"><span class="label">NID</span><span class="val">${escapeHtml(r.nid)}</span></div>
-      <div class="row"><span class="label">DOB</span><span class="val">${escapeHtml(r.dob)}</span></div>
+
+  setStatus(hits.length + ' match' + (hits.length > 1 ? 'es' : '') + ' found', 'ok');
+
+  $out.innerHTML = hits.map(r => `
+    <div class="card">
+      <div class="row"><span class="label">number</span><span class="val">${escapeHtml(r.number)}</span></div>
+      <div class="row"><span class="label">nid</span><span class="val nid">${escapeHtml(r.nid)}</span></div>
+      <div class="row"><span class="label">dob</span><span class="val dob">${escapeHtml(r.dob)}</span></div>
     </div>
   `).join('');
+
+  $btn.disabled = false;
 }
 
 function escapeHtml(s) {
@@ -140,6 +455,12 @@ function escapeHtml(s) {
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
 }
+
+/* ---------- wire ---------- */
+$form.addEventListener('submit', e => { e.preventDefault(); runSearch(); });
+$q.addEventListener('input', () => {
+  $q.value = $q.value.replace(/[^\d+]/g, '').slice(0, 20);
+});
 
 loadDB();
 </script>
