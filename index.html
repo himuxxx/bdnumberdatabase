@@ -1,17 +1,16 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <meta name="theme-color" content="#05070a" />
-<title>VOID // LOOKUP</title>
+<title>BD NUM TO NID</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+Bengali:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --bg: #05070a;
-    --bg-2: #0a0e14;
     --panel: rgba(10, 20, 28, 0.72);
     --line: rgba(0, 255, 170, 0.14);
     --line-strong: rgba(0, 255, 170, 0.4);
@@ -35,7 +34,6 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* grid backdrop */
   body::before {
     content: "";
     position: fixed;
@@ -48,7 +46,6 @@
     z-index: 0;
     mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 85%);
   }
-  /* scanlines */
   body::after {
     content: "";
     position: fixed;
@@ -73,25 +70,26 @@
     padding: clamp(24px, 6vw, 56px) 18px 80px;
   }
 
-  /* header */
   .hdr {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 6px;
+    flex-wrap: wrap;
   }
   .dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--neon);
     box-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon);
     animation: pulse 2s infinite;
+    flex-shrink: 0;
   }
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.35; }
   }
   .title {
-    font-size: clamp(18px, 4.4vw, 22px);
+    font-size: clamp(17px, 4.2vw, 21px);
     font-weight: 700;
     letter-spacing: 0.06em;
     color: var(--text);
@@ -107,7 +105,6 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    font-family: "Noto Sans Bengali", "JetBrains Mono", sans-serif;
   }
   .cursor {
     display: inline-block;
@@ -120,7 +117,6 @@
   }
   @keyframes blink { 50% { opacity: 0; } }
 
-  /* input bar */
   .search {
     position: relative;
     display: flex;
@@ -183,7 +179,6 @@
   button:active { transform: translateY(1px); }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-  /* status strip */
   .status {
     font-size: 11px;
     color: var(--muted);
@@ -203,7 +198,6 @@
     box-shadow: 0 0 8px currentColor;
   }
 
-  /* results */
   #out { display: flex; flex-direction: column; gap: 12px; }
 
   .card {
@@ -216,7 +210,7 @@
     -webkit-backdrop-filter: blur(8px);
     box-shadow: var(--shadow), inset 0 1px 0 rgba(0, 255, 170, 0.08);
     overflow: hidden;
-    animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation: slideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
   }
   .card::before {
     content: "";
@@ -227,21 +221,16 @@
     opacity: 0.7;
   }
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(10px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .card:nth-child(1) { animation-delay: 0.02s; }
-  .card:nth-child(2) { animation-delay: 0.08s; }
-  .card:nth-child(3) { animation-delay: 0.14s; }
-  .card:nth-child(4) { animation-delay: 0.20s; }
-  .card:nth-child(5) { animation-delay: 0.26s; }
 
   .row {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 12px;
-    padding: 14px 0;
+    padding: 13px 0;
     border-bottom: 1px dashed var(--line);
     font-size: 14px;
   }
@@ -262,6 +251,12 @@
   }
   .val.nid { color: var(--neon-2); text-shadow: 0 0 10px rgba(0, 212, 255, 0.4); }
   .val.dob { color: var(--neon); text-shadow: 0 0 10px rgba(0, 255, 170, 0.35); }
+  .val mark {
+    background: transparent;
+    color: #ffffff;
+    text-shadow: 0 0 10px var(--neon), 0 0 20px rgba(0, 255, 170, 0.7);
+    font-weight: 700;
+  }
 
   .empty, .error {
     padding: 18px;
@@ -270,17 +265,28 @@
     border: 1px solid var(--line);
     background: var(--panel);
     letter-spacing: 0.03em;
-    font-family: "Noto Sans Bengali", "JetBrains Mono", sans-serif;
   }
   .empty { color: var(--muted); }
-  .empty::before { content: "// "; color: var(--neon); font-family: "JetBrains Mono", monospace; }
+  .empty::before { content: "// "; color: var(--neon); }
   .error {
     color: var(--warn);
     border-color: rgba(255, 84, 112, 0.4);
   }
   .error::before { content: "!! "; font-weight: 700; }
 
-  /* glow footer */
+  .more {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    padding: 14px 0;
+    letter-spacing: 0.06em;
+  }
+  .more a {
+    color: var(--neon);
+    text-decoration: none;
+    border-bottom: 1px dashed var(--neon);
+  }
+
   .foot {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -290,7 +296,6 @@
     z-index: 3;
   }
 
-  /* small screens */
   @media (max-width: 480px) {
     .search { flex-direction: column; }
     .search::before { top: 27px; }
@@ -298,7 +303,6 @@
     .row { padding: 12px 0; font-size: 13px; }
   }
 
-  /* reduced motion */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.001ms !important;
@@ -312,15 +316,15 @@
 <div class="shell">
   <div class="hdr">
     <span class="dot"></span>
-    <span class="title">VOID<span class="accent">//</span>LOOKUP</span>
+    <span class="title">BD<span class="accent"> NUM </span>TO<span class="accent"> NID</span></span>
   </div>
   <div class="tagline">
-    <span>query the archive</span>
+    <span>Mobile Number &rarr; NID &amp; DOB</span>
     <span class="cursor"></span>
   </div>
 
   <form class="search" id="form" autocomplete="off">
-    <input id="q" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" maxlength="20" aria-label="Phone number" />
+    <input id="q" type="tel" inputmode="numeric" placeholder="01765" maxlength="20" aria-label="Phone prefix or full number" />
     <button type="submit" id="btn">SCAN</button>
   </form>
 
@@ -338,8 +342,12 @@ const $form = document.getElementById('form');
 
 let DB = [];
 let loadPromise = null;
+let debounceTimer = null;
 
-/* ---------- parser: survives trailing commas, missing commas, truncation ---------- */
+const PAGE = 40;          // how many cards to render at once
+const MIN_PREFIX = 3;     // don't search until at least 3 digits
+
+/* ---------- parser ---------- */
 function parseLoose(raw) {
   raw = String(raw)
     .replace(/^\uFEFF/, '')
@@ -347,20 +355,17 @@ function parseLoose(raw) {
     .replace(/\s*\[file content end\]\s*$/i, '')
     .trim();
 
-  // fast path
   try {
     const v = JSON.parse(raw);
     if (Array.isArray(v)) return v.filter(r => r && r.number);
   } catch (_) {}
 
-  // strip trailing commas
   const cleaned = raw.replace(/,\s*(?=[}\]])/g, '');
   try {
     const v = JSON.parse(cleaned);
     if (Array.isArray(v)) return v.filter(r => r && r.number);
   } catch (_) {}
 
-  // per-object rescue
   const out = [];
   let i = 0;
   const n = raw.length;
@@ -417,37 +422,55 @@ function setStatus(text, cls) {
   $status.innerHTML = '<span class="pill"></span><span>' + escapeHtml(text) + '</span>';
 }
 
-/* ---------- search ---------- */
-async function runSearch() {
-  const q = $q.value.trim();
-  $out.innerHTML = '';
-  if (!q) { setStatus('enter a number', ''); return; }
-
-  $btn.disabled = true;
-  if (!DB.length) await loadDB();
-
-  if (!DB.length) { $btn.disabled = false; return; }
-
-  const hits = DB.filter(r => String(r.number) === q);
-
-  if (!hits.length) {
-    setStatus('no match', 'err');
-    $out.innerHTML = '<div class="empty">এই নাম্বারে কোনো রেকর্ড পাওয়া যায়নি।</div>';
-    $btn.disabled = false;
-    return;
+/* ---------- rendering ---------- */
+function highlight(num, prefix) {
+  const s = String(num);
+  if (prefix && s.startsWith(prefix)) {
+    return '<mark>' + escapeHtml(prefix) + '</mark>' + escapeHtml(s.slice(prefix.length));
   }
+  return escapeHtml(s);
+}
 
-  setStatus(hits.length + ' match' + (hits.length > 1 ? 'es' : '') + ' found', 'ok');
-
-  $out.innerHTML = hits.map(r => `
+function renderCards(hits, prefix) {
+  const shown = hits.slice(0, PAGE);
+  let html = shown.map(r => `
     <div class="card">
-      <div class="row"><span class="label">number</span><span class="val">${escapeHtml(r.number)}</span></div>
+      <div class="row"><span class="label">number</span><span class="val">${highlight(r.number, prefix)}</span></div>
       <div class="row"><span class="label">nid</span><span class="val nid">${escapeHtml(r.nid)}</span></div>
       <div class="row"><span class="label">dob</span><span class="val dob">${escapeHtml(r.dob)}</span></div>
     </div>
   `).join('');
 
-  $btn.disabled = false;
+  if (hits.length > PAGE) {
+    html += `<div class="more">showing ${PAGE} of ${hits.length} &mdash; refine the prefix to narrow down</div>`;
+  }
+  $out.innerHTML = html;
+}
+
+/* ---------- search ---------- */
+async function runSearch(prefix) {
+  prefix = String(prefix || '').trim();
+  $out.innerHTML = '';
+
+  if (!prefix) { setStatus('type a number to scan', ''); return; }
+  if (prefix.length < MIN_PREFIX) {
+    setStatus('type at least ' + MIN_PREFIX + ' digits…', '');
+    return;
+  }
+
+  if (!DB.length) await loadDB();
+  if (!DB.length) return;
+
+  const hits = DB.filter(r => String(r.number).startsWith(prefix));
+
+  if (!hits.length) {
+    setStatus('no match', 'err');
+    $out.innerHTML = '<div class="empty">এই prefix-এ কোনো রেকর্ড পাওয়া যায়নি।</div>';
+    return;
+  }
+
+  setStatus(hits.length + ' match' + (hits.length > 1 ? 'es' : '') + ' · prefix "' + prefix + '"', 'ok');
+  renderCards(hits, prefix);
 }
 
 function escapeHtml(s) {
@@ -457,9 +480,12 @@ function escapeHtml(s) {
 }
 
 /* ---------- wire ---------- */
-$form.addEventListener('submit', e => { e.preventDefault(); runSearch(); });
+$form.addEventListener('submit', e => { e.preventDefault(); runSearch($q.value); });
+
 $q.addEventListener('input', () => {
-  $q.value = $q.value.replace(/[^\d+]/g, '').slice(0, 20);
+  $q.value = $q.value.replace(/\D/g, '').slice(0, 20);
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => runSearch($q.value), 120);
 });
 
 loadDB();
