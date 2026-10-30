@@ -154,7 +154,7 @@
   </div>
 
   <form class="search" id="form" autocomplete="off">
-    <input id="q" type="tel" inputmode="numeric" placeholder="01765" maxlength="20" aria-label="Phone prefix or full number" />
+    <input id="q" type="tel" inputmode="numeric" placeholder="01XXXXXXXXX" maxlength="11" aria-label="Full 11-digit mobile number" />
     <button type="submit" id="btn">SCAN</button>
   </form>
 
@@ -172,9 +172,8 @@ const $status = document.getElementById('status');
 const $btn = document.getElementById('btn');
 const $form = document.getElementById('form');
 
-const MIN_PREFIX = 3;      // minimum prefix for prefix search
-const FULL_LEN   = 11;     // BD mobile full length (exact lookup)
-const PAGE_SIZE  = 100;
+const FULL_LEN  = 11;   // only 11-digit exact lookup allowed
+const PAGE_SIZE = 100;
 
 // Your actual Site Key
 const TURNSTILE_SITE_KEY = '0x4AAAAAAFsXi1h2M35slh8X';
@@ -263,9 +262,9 @@ function setStatus(text, cls) {
 
 function idleStatus() {
   if (dbTotal) {
-    setStatus('database: ' + dbTotal.toLocaleString() + ' records · type a number to scan', 'ok');
+    setStatus('database: ' + dbTotal.toLocaleString() + ' records · enter 11-digit number to scan', 'ok');
   } else {
-    setStatus('type a number to scan', 'ok');
+    setStatus('enter full 11-digit number to scan', 'ok');
   }
 }
 
@@ -290,7 +289,7 @@ function escapeHtml(s) {
 }
 
 function isFullNumber(s) {
-  return s.length === FULL_LEN;  // 11 digits → exact lookup
+  return s.length === FULL_LEN;
 }
 
 function highlight(num, prefix) {
@@ -316,8 +315,6 @@ async function loadPage(isFirst, retryCount = 0) {
   if (loading) return;
   if (!isFirst && currentOffset >= currentTotalMatches) return;
 
-  const full = isFullNumber(currentQuery);
-
   loading = true;
   $btn.disabled = true;
 
@@ -328,14 +325,12 @@ async function loadPage(isFirst, retryCount = 0) {
     currentOffset = 0;
     currentTotalMatches = 0;
     moreAvailable = false;
-    setStatus(full ? 'looking up…' : 'scanning…', '');
+    setStatus('looking up…', '');
   }
 
   const loadEl = document.createElement('div');
   loadEl.className = 'loading';
-  loadEl.textContent = (isFirst && retryCount === 0)
-    ? (full ? 'looking up' : 'scanning')
-    : 'loading more';
+  loadEl.textContent = (isFirst && retryCount === 0) ? 'looking up' : 'loading more';
   $out.insertBefore(loadEl, sentinel);
 
   if (inFlight) inFlight.abort();
@@ -397,13 +392,9 @@ async function loadPage(isFirst, retryCount = 0) {
     }));
 
     if (isFirst && retryCount === 0 && !hits.length) {
-      setStatus(full ? ('no record for ' + currentQuery) : 'no match', 'err');
+      setStatus('no record for ' + currentQuery, 'err');
       $out.insertAdjacentHTML('afterbegin',
-        '<div class="empty">' +
-        (full
-          ? 'এই নম্বরের কোনো রেকর্ড পাওয়া যায়নি।'
-          : 'এই prefix-এ কোনো রেকর্ড পাওয়া যায়নি।') +
-        '</div>'
+        '<div class="empty">এই নম্বরের কোনো রেকর্ড পাওয়া যায়নি।</div>'
       );
       return;
     }
@@ -414,23 +405,12 @@ async function loadPage(isFirst, retryCount = 0) {
     currentOffset += hits.length;
     moreAvailable = currentOffset < currentTotalMatches;
 
-    /* ---------- context-aware status ---------- */
-    if (full) {
-      if (currentTotalMatches === 1) {
-        setStatus('exact match · ' + currentQuery, 'ok');
-      } else if (currentTotalMatches > 1) {
-        setStatus(currentTotalMatches.toLocaleString() + ' matches · ' + currentQuery, 'ok');
-      } else {
-        setStatus('no record for ' + currentQuery, 'err');
-      }
+    if (currentTotalMatches === 1) {
+      setStatus('exact match · ' + currentQuery, 'ok');
+    } else if (currentTotalMatches > 1) {
+      setStatus(currentTotalMatches.toLocaleString() + ' matches · showing ' + currentOffset.toLocaleString() + ' · ' + currentQuery, 'ok');
     } else {
-      setStatus(
-        currentTotalMatches.toLocaleString() + ' match' +
-        (currentTotalMatches === 1 ? '' : 'es') +
-        ' · showing ' + currentOffset.toLocaleString() +
-        ' · "' + currentQuery + '"',
-        'ok'
-      );
+      setStatus('no record for ' + currentQuery, 'err');
     }
 
   } catch (e) {
@@ -449,13 +429,13 @@ async function loadPage(isFirst, retryCount = 0) {
   }
 }
 
-function startSearch(prefix) {
-  prefix = String(prefix || '').trim();
-  currentQuery = prefix;
+function startSearch(number) {
+  number = String(number || '').trim();
+  currentQuery = number;
 
-  if (!prefix) { idleStatus(); return; }
-  if (prefix.length < MIN_PREFIX) {
-    setStatus('type at least ' + MIN_PREFIX + ' digits…', 'ok');
+  if (!number) { idleStatus(); return; }
+  if (!isFullNumber(number)) {
+    setStatus('enter full 11-digit number to scan', 'err');
     return;
   }
 
@@ -468,8 +448,8 @@ async function requestScan() {
   const q = $q.value.replace(/\D/g, '').trim();
 
   if (!q) { idleStatus(); return; }
-  if (q.length < MIN_PREFIX) {
-    setStatus('type at least ' + MIN_PREFIX + ' digits…', 'ok');
+  if (!isFullNumber(q)) {
+    setStatus('enter full 11-digit number to scan', 'err');
     return;
   }
   if (!turnstileWidgetId) {
@@ -494,9 +474,9 @@ async function requestScan() {
 
 $form.addEventListener('submit', e => { e.preventDefault(); requestScan(); });
 
-// Digits only + subtle hint styling for full numbers
+// Digits only + hint styling
 $q.addEventListener('input', () => {
-  $q.value = $q.value.replace(/\D/g, '').slice(0, 20);
+  $q.value = $q.value.replace(/\D/g, '').slice(0, FULL_LEN);
   $q.classList.toggle('exact-ready', isFullNumber($q.value));
 });
 
