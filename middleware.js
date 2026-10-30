@@ -3,7 +3,7 @@
 // Allows only same-origin fetch() calls made by our own page.
 
 export const config = {
-  matcher: '/data.json'
+  matcher: ['/data.json', '/api/_data/:path*']
 };
 
 function block() {
