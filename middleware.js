@@ -6,6 +6,13 @@ export const config = {
   matcher: ['/data.json', '/api/_data/:path*']
 };
 
+export default function middleware() {
+  return new Response('403 forbidden', {
+    status: 403,
+    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
+  });
+}
+
 function block() {
   return new Response('403 forbidden', {
     status: 403,
