@@ -8,8 +8,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-<!-- Turnstile Script -->
-<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+<!-- Turnstile Script (explicit + onload) -->
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onloadTurnstileCallback" async defer></script>
 <style>
   :root {
     --bg:#05070a; --panel:rgba(10,20,28,.72);
@@ -172,9 +172,15 @@ const MIN_PREFIX = 3;
 const PAGE_SIZE = 100;
 
 // Your actual Site Key
-const TURNSTILE_SITE_KEY = '0x4AAAAAAFsXi1h2M35slh8X'; 
+const TURNSTILE_SITE_KEY = '0x4AAAAAAFsXi1h2M35slh8X';
 
+/* ---------- Turnstile state ---------- */
+let turnstileWidgetId = null;
 let turnstileToken = '';
+let pendingQuery = null;
+let captchaSolving = false;
+
+/* ---------- search state ---------- */
 let dbTotal = 0;
 let currentQuery = '';
 let currentOffset = 0;
@@ -182,7 +188,6 @@ let currentTotalMatches = 0;
 let loading = false;
 let moreAvailable = false;
 let inFlight = null;
-let debounceTimer = null;
 
 const sentinel = document.createElement('div');
 sentinel.style.cssText = 'height:1px;width:100%;flex-shrink:0;';
@@ -190,31 +195,37 @@ $out.appendChild(sentinel);
 
 const io = new IntersectionObserver(entries => {
   if (!entries[0].isIntersecting) return;
-  if (loading || !moreAvailable) return;
+  if (loading || !moreAvailable || !turnstileToken) return;
   loadPage(false);
 }, { root: $out, rootMargin: '400px' });
 io.observe(sentinel);
 
-/* ---------- Turnstile setup ---------- */
+/* ---------- Turnstile setup (on-demand execute) ---------- */
 window.onloadTurnstileCallback = function() {
-  turnstile.render('#turnstile-container', {
+  turnstileWidgetId = turnstile.render('#turnstile-container', {
     sitekey: TURNSTILE_SITE_KEY,
     theme: 'dark',
+    execution: 'execute',    // চ্যালেঞ্জ শুধু execute() কল করলে শুরু হবে
+    appearance: 'execute',   // execute() কল করার আগে উইজেট দেখা যাবে না
     callback: function(token) {
       turnstileToken = token;
-      if ($q.value.length >= MIN_PREFIX && $out.innerHTML === '') {
-        startSearch($q.value);
-      }
+      captchaSolving = false;
+      $btn.disabled = false;
+      const q = pendingQuery;
+      pendingQuery = null;
+      if (q !== null) startSearch(q);
     },
     'expired-callback': function() {
       turnstileToken = '';
+    },
+    'error-callback': function(err) {
+      captchaSolving = false;
+      pendingQuery = null;
+      $btn.disabled = false;
+      setStatus('captcha error: ' + err, 'err');
     }
   });
 };
-
-if (window.turnstile) {
-  window.onloadTurnstileCallback();
-}
 
 /* ---------- status ---------- */
 function setStatus(text, cls) {
@@ -305,7 +316,7 @@ async function loadPage(isFirst) {
               + '&offset=' + currentOffset
               + '&limit='  + PAGE_SIZE
               + '&token='  + encodeURIComponent(turnstileToken);
-              
+
     const res = await fetch(url, {
       signal: ctrl.signal,
       headers: { 'accept': 'application/json' }
@@ -390,12 +401,37 @@ function startSearch(prefix) {
   loadPage(true);
 }
 
-$form.addEventListener('submit', e => { e.preventDefault(); startSearch($q.value); });
+/* ---------- SCAN → captcha first, then search ---------- */
+function requestScan() {
+  const q = $q.value.replace(/\D/g, '').trim();
 
+  if (!q) { idleStatus(); return; }
+  if (q.length < MIN_PREFIX) {
+    setStatus('type at least ' + MIN_PREFIX + ' digits…', 'ok');
+    return;
+  }
+  if (!turnstileWidgetId) {
+    setStatus('captcha not ready, wait a moment…', 'err');
+    return;
+  }
+  if (captchaSolving || loading) return;
+
+  captchaSolving = true;
+  pendingQuery = q;
+  turnstileToken = '';
+  $btn.disabled = true;
+  setStatus('solving captcha…', '');
+
+  // প্রতিবার নতুন চ্যালেঞ্জ
+  try { turnstile.reset(turnstileWidgetId); } catch (_) {}
+  turnstile.execute(turnstileWidgetId);
+}
+
+$form.addEventListener('submit', e => { e.preventDefault(); requestScan(); });
+
+// শুধু ডিজিট রাখা, কোনো auto-search নেই
 $q.addEventListener('input', () => {
   $q.value = $q.value.replace(/\D/g, '').slice(0, 20);
-  clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => startSearch($q.value), 200);
 });
 
 idleStatus();
