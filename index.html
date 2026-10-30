@@ -19,7 +19,7 @@
   html, body {
     height: 100%;
     margin: 0;
-    overflow: hidden;              /* page never scrolls */
+    overflow: hidden;
   }
   body {
     font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -53,24 +53,46 @@
     overflow: hidden;
   }
 
-  .hdr { display:flex; align-items:center; gap:10px; margin-bottom:4px; flex-wrap:wrap; flex-shrink:0; }
-  .dot { width:8px;height:8px;border-radius:50%;background:var(--neon);
+  .hdr {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .dot {
+    width:8px;height:8px;border-radius:50%;background:var(--neon);
     box-shadow:0 0 10px var(--neon),0 0 20px var(--neon);
-    animation:pulse 2s infinite;flex-shrink:0; }
+    animation:pulse 2s infinite;flex-shrink:0;
+  }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
-  .title { font-size:clamp(16px,4vw,20px);font-weight:700;letter-spacing:.06em;
-    color:var(--text);text-transform:uppercase; }
+  .title {
+    font-size:clamp(16px,4vw,20px);font-weight:700;letter-spacing:.06em;
+    color:var(--text);text-transform:uppercase;
+  }
   .title .accent { color:var(--neon); text-shadow:0 0 14px rgba(0,255,170,.55); }
 
-  .tagline { font-size:11px;color:var(--muted);letter-spacing:.05em;
-    margin-bottom:14px;display:flex;align-items:center;gap:8px;flex-shrink:0; }
-  .cursor { display:inline-block;width:7px;height:12px;background:var(--neon);
-    animation:blink 1.05s steps(1) infinite;box-shadow:0 0 10px var(--neon);vertical-align:middle; }
+  .tagline {
+    font-size:11px;color:var(--muted);letter-spacing:.05em;
+    margin-bottom:14px;
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    flex-shrink:0;text-align:center;
+  }
+  .cursor {
+    display:inline-block;width:7px;height:12px;background:var(--neon);
+    animation:blink 1.05s steps(1) infinite;box-shadow:0 0 10px var(--neon);
+    vertical-align:middle;
+  }
   @keyframes blink { 50%{opacity:0} }
 
   .search { position:relative;display:flex;gap:10px;margin-bottom:10px;flex-shrink:0; }
-  .search::before { content:"> ";position:absolute;left:14px;top:50%;transform:translateY(-50%);
-    color:var(--neon);font-weight:700;z-index:1;text-shadow:0 0 8px var(--neon); }
+  .search::before {
+    content:"> ";position:absolute;left:14px;top:50%;transform:translateY(-50%);
+    color:var(--neon);font-weight:700;z-index:1;text-shadow:0 0 8px var(--neon);
+  }
   input {
     flex:1;padding:13px 14px 13px 36px;border-radius:8px;
     border:1px solid var(--line-strong);background:var(--panel);
@@ -103,7 +125,10 @@
     display:flex;align-items:center;gap:6px;flex-shrink:0;
     font-variant-numeric:tabular-nums;
   }
-  .status.ok  { color:var(--neon); }
+  .status.ok {
+    color: var(--neon);
+    text-shadow: 0 0 8px rgba(0,255,170,.55);
+  }
   .status.err { color:var(--warn); }
   .status .pill {
     display:inline-block;width:6px;height:6px;border-radius:50%;
@@ -112,7 +137,7 @@
 
   #out {
     flex: 1;
-    min-height: 0;                 /* critical: lets flex child scroll */
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
@@ -253,7 +278,6 @@ let moreAvailable = false;
 let inFlight = null;
 let debounceTimer = null;
 
-// sentinel: invisible marker at end of #out for infinite scroll
 const sentinel = document.createElement('div');
 sentinel.style.cssText = 'height:1px;width:100%;flex-shrink:0;';
 $out.appendChild(sentinel);
@@ -273,9 +297,9 @@ function setStatus(text, cls) {
 
 function idleStatus() {
   if (dbTotal) {
-    setStatus('database: ' + dbTotal.toLocaleString() + ' records · type a number to scan', '');
+    setStatus('database: ' + dbTotal.toLocaleString() + ' records · type a number to scan', 'ok');
   } else {
-    setStatus('type a number to scan', '');
+    setStatus('type a number to scan', 'ok');
   }
 }
 
@@ -326,7 +350,6 @@ async function loadPage(isFirst) {
   $btn.disabled = true;
 
   if (isFirst) {
-    // wipe everything but the sentinel
     while ($out.firstChild && $out.firstChild !== sentinel) {
       $out.removeChild($out.firstChild);
     }
@@ -395,7 +418,6 @@ async function loadPage(isFirst) {
       return;
     }
 
-    // insert cards before sentinel
     const html = hits.map(r => renderCard(r, currentQuery)).join('');
     sentinel.insertAdjacentHTML('beforebegin', html);
 
@@ -409,11 +431,6 @@ async function loadPage(isFirst) {
       ' · "' + currentQuery + '"',
       'ok'
     );
-
-    if (moreAvailable && !loading) {
-      // observer will fire when near bottom; also allow immediate trigger if viewport tall
-      // (observer handles that automatically with rootMargin)
-    }
 
   } catch (e) {
     if (e.name === 'AbortError') return;
@@ -437,7 +454,7 @@ function startSearch(prefix) {
 
   if (!prefix) { idleStatus(); return; }
   if (prefix.length < MIN_PREFIX) {
-    setStatus('type at least ' + MIN_PREFIX + ' digits…', '');
+    setStatus('type at least ' + MIN_PREFIX + ' digits…', 'ok');
     return;
   }
 
