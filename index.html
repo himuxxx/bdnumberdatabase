@@ -21,7 +21,6 @@
     --warn: #ff5470;
     --shadow: 0 0 24px rgba(0, 255, 170, 0.18);
   }
-
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; }
   body {
@@ -33,281 +32,171 @@
     overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
   }
-
   body::before {
     content: "";
-    position: fixed;
-    inset: 0;
+    position: fixed; inset: 0;
     background-image:
       linear-gradient(rgba(0, 255, 170, 0.045) 1px, transparent 1px),
       linear-gradient(90deg, rgba(0, 255, 170, 0.045) 1px, transparent 1px);
     background-size: 44px 44px;
-    pointer-events: none;
-    z-index: 0;
+    pointer-events: none; z-index: 0;
     mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 85%);
   }
   body::after {
     content: "";
-    position: fixed;
-    inset: 0;
-    background: repeating-linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.018) 0px,
-      rgba(255, 255, 255, 0.018) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-    pointer-events: none;
-    z-index: 2;
-    mix-blend-mode: overlay;
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(to bottom,
+      rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px,
+      transparent 1px, transparent 3px);
+    pointer-events: none; z-index: 2; mix-blend-mode: overlay;
   }
-
   .shell {
-    position: relative;
-    z-index: 3;
-    max-width: 640px;
-    margin: 0 auto;
+    position: relative; z-index: 3;
+    max-width: 640px; margin: 0 auto;
     padding: clamp(24px, 6vw, 56px) 18px 80px;
   }
-
-  .hdr {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 6px;
-    flex-wrap: wrap;
-  }
+  .hdr { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap; }
   .dot {
     width: 8px; height: 8px; border-radius: 50%;
     background: var(--neon);
     box-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon);
-    animation: pulse 2s infinite;
-    flex-shrink: 0;
+    animation: pulse 2s infinite; flex-shrink: 0;
   }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.35;} }
   .title {
     font-size: clamp(17px, 4.2vw, 21px);
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    color: var(--text);
-    text-transform: uppercase;
+    font-weight: 700; letter-spacing: .06em;
+    color: var(--text); text-transform: uppercase;
   }
-  .title .accent { color: var(--neon); text-shadow: 0 0 14px rgba(0, 255, 170, 0.55); }
-
+  .title .accent { color: var(--neon); text-shadow: 0 0 14px rgba(0,255,170,.55); }
   .tagline {
-    font-size: 12px;
-    color: var(--muted);
-    letter-spacing: 0.05em;
-    margin-bottom: 28px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 12px; color: var(--muted); letter-spacing: .05em;
+    margin-bottom: 28px; display: flex; align-items: center; gap: 8px;
   }
   .cursor {
-    display: inline-block;
-    width: 8px;
-    height: 14px;
-    background: var(--neon);
-    animation: blink 1.05s steps(1) infinite;
-    box-shadow: 0 0 10px var(--neon);
-    vertical-align: middle;
+    display: inline-block; width: 8px; height: 14px;
+    background: var(--neon); animation: blink 1.05s steps(1) infinite;
+    box-shadow: 0 0 10px var(--neon); vertical-align: middle;
   }
   @keyframes blink { 50% { opacity: 0; } }
-
-  .search {
-    position: relative;
-    display: flex;
-    gap: 10px;
-    margin-bottom: 22px;
-  }
+  .search { position: relative; display: flex; gap: 10px; margin-bottom: 22px; }
   .search::before {
-    content: "> ";
-    position: absolute;
-    left: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--neon);
-    font-weight: 700;
-    z-index: 1;
-    text-shadow: 0 0 8px var(--neon);
+    content: "> "; position: absolute; left: 16px; top: 50%;
+    transform: translateY(-50%); color: var(--neon);
+    font-weight: 700; z-index: 1; text-shadow: 0 0 8px var(--neon);
   }
   input {
-    flex: 1;
-    padding: 16px 16px 16px 40px;
-    border-radius: 8px;
-    border: 1px solid var(--line-strong);
-    background: var(--panel);
-    color: var(--text);
-    font-size: 16px;
-    font-family: inherit;
-    letter-spacing: 0.04em;
+    flex: 1; padding: 16px 16px 16px 40px;
+    border-radius: 8px; border: 1px solid var(--line-strong);
+    background: var(--panel); color: var(--text);
+    font-size: 16px; font-family: inherit; letter-spacing: .04em;
     outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
   }
   input::placeholder { color: #3d534d; }
   input:focus {
     border-color: var(--neon);
-    background: rgba(10, 26, 22, 0.9);
-    box-shadow: 0 0 0 1px var(--neon), 0 0 24px rgba(0, 255, 170, 0.35);
+    background: rgba(10, 26, 22, .9);
+    box-shadow: 0 0 0 1px var(--neon), 0 0 24px rgba(0,255,170,.35);
   }
   button {
-    padding: 0 22px;
-    min-height: 54px;
-    border-radius: 8px;
-    border: 1px solid var(--neon);
-    background: transparent;
-    color: var(--neon);
-    font-weight: 700;
-    font-size: 14px;
-    font-family: inherit;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: all 0.2s;
-    text-shadow: 0 0 8px rgba(0, 255, 170, 0.6);
+    padding: 0 22px; min-height: 54px; border-radius: 8px;
+    border: 1px solid var(--neon); background: transparent;
+    color: var(--neon); font-weight: 700; font-size: 14px;
+    font-family: inherit; letter-spacing: .15em; text-transform: uppercase;
+    cursor: pointer; transition: all .2s;
+    text-shadow: 0 0 8px rgba(0,255,170,.6);
   }
   button:hover, button:focus-visible {
-    background: rgba(0, 255, 170, 0.1);
-    box-shadow: 0 0 18px rgba(0, 255, 170, 0.5), inset 0 0 18px rgba(0, 255, 170, 0.08);
+    background: rgba(0,255,170,.1);
+    box-shadow: 0 0 18px rgba(0,255,170,.5), inset 0 0 18px rgba(0,255,170,.08);
     outline: none;
   }
   button:active { transform: translateY(1px); }
-  button:disabled { opacity: 0.4; cursor: not-allowed; }
-
+  button:disabled { opacity: .4; cursor: not-allowed; }
   .status {
-    font-size: 11px;
-    color: var(--muted);
-    letter-spacing: 0.06em;
-    margin-bottom: 16px;
-    min-height: 14px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    font-size: 11px; color: var(--muted);
+    letter-spacing: .06em; margin-bottom: 16px;
+    min-height: 14px; display: flex; align-items: center; gap: 6px;
   }
   .status.ok { color: var(--neon); }
   .status.err { color: var(--warn); }
   .status .pill {
-    display: inline-block;
-    width: 6px; height: 6px; border-radius: 50%;
-    background: currentColor;
+    display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: currentColor;
     box-shadow: 0 0 8px currentColor;
   }
-
   #out { display: flex; flex-direction: column; gap: 12px; }
-
   .card {
-    position: relative;
-    background: var(--panel);
-    border: 1px solid var(--line-strong);
-    border-radius: 10px;
+    position: relative; background: var(--panel);
+    border: 1px solid var(--line-strong); border-radius: 10px;
     padding: 4px 18px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: var(--shadow), inset 0 1px 0 rgba(0, 255, 170, 0.08);
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(0,255,170,.08);
     overflow: hidden;
-    animation: slideUp 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    animation: slideUp .28s cubic-bezier(.22,1,.36,1) backwards;
   }
   .card::before {
-    content: "";
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 1px;
     background: linear-gradient(90deg, transparent, var(--neon), transparent);
-    opacity: 0.7;
+    opacity: .7;
   }
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-
   .row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    padding: 13px 0;
-    border-bottom: 1px dashed var(--line);
-    font-size: 14px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; padding: 13px 0;
+    border-bottom: 1px dashed var(--line); font-size: 14px;
   }
   .row:last-child { border-bottom: none; }
   .label {
-    color: var(--muted);
-    font-size: 11px;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
+    color: var(--muted); font-size: 11px;
+    letter-spacing: .18em; text-transform: uppercase;
   }
   .val {
-    color: var(--text);
-    font-weight: 500;
-    letter-spacing: 0.06em;
-    text-align: right;
-    word-break: break-all;
-    font-variant-numeric: tabular-nums;
+    color: var(--text); font-weight: 500;
+    letter-spacing: .06em; text-align: right;
+    word-break: break-all; font-variant-numeric: tabular-nums;
   }
-  .val.nid { color: var(--neon-2); text-shadow: 0 0 10px rgba(0, 212, 255, 0.4); }
-  .val.dob { color: var(--neon); text-shadow: 0 0 10px rgba(0, 255, 170, 0.35); }
+  .val.nid { color: var(--neon-2); text-shadow: 0 0 10px rgba(0,212,255,.4); }
+  .val.dob { color: var(--neon);   text-shadow: 0 0 10px rgba(0,255,170,.35); }
   .val mark {
-    background: transparent;
-    color: #ffffff;
-    text-shadow: 0 0 10px var(--neon), 0 0 20px rgba(0, 255, 170, 0.7);
+    background: transparent; color: #fff;
+    text-shadow: 0 0 10px var(--neon), 0 0 20px rgba(0,255,170,.7);
     font-weight: 700;
   }
-
   .empty, .error {
-    padding: 18px;
-    border-radius: 8px;
-    font-size: 13px;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    letter-spacing: 0.03em;
+    padding: 18px; border-radius: 8px; font-size: 13px;
+    border: 1px solid var(--line); background: var(--panel);
+    letter-spacing: .03em;
   }
   .empty { color: var(--muted); }
   .empty::before { content: "// "; color: var(--neon); }
-  .error {
-    color: var(--warn);
-    border-color: rgba(255, 84, 112, 0.4);
-  }
+  .error { color: var(--warn); border-color: rgba(255,84,112,.4); }
   .error::before { content: "!! "; font-weight: 700; }
-
   .more {
-    text-align: center;
-    font-size: 12px;
-    color: var(--muted);
-    padding: 14px 0;
-    letter-spacing: 0.06em;
+    text-align: center; font-size: 12px; color: var(--muted);
+    padding: 14px 0; letter-spacing: .06em;
   }
-  .more a {
-    color: var(--neon);
-    text-decoration: none;
-    border-bottom: 1px dashed var(--neon);
-  }
-
   .foot {
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    height: 2px;
+    position: fixed; bottom: 0; left: 0; right: 0; height: 2px;
     background: linear-gradient(90deg, transparent, var(--neon), transparent);
-    opacity: 0.5;
-    z-index: 3;
+    opacity: .5; z-index: 3;
   }
-
   @media (max-width: 480px) {
     .search { flex-direction: column; }
     .search::before { top: 27px; }
     button { width: 100%; min-height: 48px; }
     .row { padding: 12px 0; font-size: 13px; }
   }
-
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
-      animation-duration: 0.001ms !important;
+      animation-duration: .001ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.001ms !important;
+      transition-duration: .001ms !important;
     }
   }
 </style>
@@ -340,89 +229,21 @@ const $status = document.getElementById('status');
 const $btn = document.getElementById('btn');
 const $form = document.getElementById('form');
 
-let DB = [];
-let loadPromise = null;
 let debounceTimer = null;
-
-const PAGE = 40;          // how many cards to render at once
-const MIN_PREFIX = 3;     // don't search until at least 3 digits
-
-/* ---------- parser ---------- */
-function parseLoose(raw) {
-  raw = String(raw)
-    .replace(/^\uFEFF/, '')
-    .replace(/^\s*\[file content begin\]\s*/i, '')
-    .replace(/\s*\[file content end\]\s*$/i, '')
-    .trim();
-
-  try {
-    const v = JSON.parse(raw);
-    if (Array.isArray(v)) return v.filter(r => r && r.number);
-  } catch (_) {}
-
-  const cleaned = raw.replace(/,\s*(?=[}\]])/g, '');
-  try {
-    const v = JSON.parse(cleaned);
-    if (Array.isArray(v)) return v.filter(r => r && r.number);
-  } catch (_) {}
-
-  const out = [];
-  let i = 0;
-  const n = raw.length;
-  while (i < n) {
-    if (raw[i] !== '{') { i++; continue; }
-    let depth = 0, j = i, inStr = false, esc = false;
-    for (; j < n; j++) {
-      const c = raw[j];
-      if (inStr) {
-        if (esc) esc = false;
-        else if (c === '\\') esc = true;
-        else if (c === '"') inStr = false;
-      } else {
-        if (c === '"') inStr = true;
-        else if (c === '{') depth++;
-        else if (c === '}') { depth--; if (depth === 0) break; }
-      }
-    }
-    if (depth !== 0) break;
-    const block = raw.slice(i, j + 1).replace(/,\s*}/g, '}');
-    try {
-      const obj = JSON.parse(block);
-      if (obj && obj.number) out.push(obj);
-    } catch (_) {}
-    i = j + 1;
-  }
-  return out;
-}
-
-/* ---------- loader ---------- */
-function loadDB() {
-  if (loadPromise) return loadPromise;
-  loadPromise = (async () => {
-    setStatus('loading data.json…', '');
-    try {
-      const res = await fetch('./data.json', { cache: 'no-store' });
-      if (!res.ok) throw new Error('fetch ' + res.status);
-      const raw = await res.text();
-      DB = parseLoose(raw);
-      if (!DB.length) {
-        setStatus('data.json empty or unparseable', 'err');
-        return;
-      }
-      setStatus(DB.length.toLocaleString() + ' records indexed', 'ok');
-    } catch (e) {
-      setStatus('load error: ' + e.message, 'err');
-    }
-  })();
-  return loadPromise;
-}
+let inFlight = null;
+const MIN_PREFIX = 3;
 
 function setStatus(text, cls) {
   $status.className = 'status ' + (cls || '');
   $status.innerHTML = '<span class="pill"></span><span>' + escapeHtml(text) + '</span>';
 }
 
-/* ---------- rendering ---------- */
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
 function highlight(num, prefix) {
   const s = String(num);
   if (prefix && s.startsWith(prefix)) {
@@ -431,23 +252,6 @@ function highlight(num, prefix) {
   return escapeHtml(s);
 }
 
-function renderCards(hits, prefix) {
-  const shown = hits.slice(0, PAGE);
-  let html = shown.map(r => `
-    <div class="card">
-      <div class="row"><span class="label">number</span><span class="val">${highlight(r.number, prefix)}</span></div>
-      <div class="row"><span class="label">nid</span><span class="val nid">${escapeHtml(r.nid)}</span></div>
-      <div class="row"><span class="label">dob</span><span class="val dob">${escapeHtml(r.dob)}</span></div>
-    </div>
-  `).join('');
-
-  if (hits.length > PAGE) {
-    html += `<div class="more">showing ${PAGE} of ${hits.length} &mdash; refine the prefix to narrow down</div>`;
-  }
-  $out.innerHTML = html;
-}
-
-/* ---------- search ---------- */
 async function runSearch(prefix) {
   prefix = String(prefix || '').trim();
   $out.innerHTML = '';
@@ -458,37 +262,71 @@ async function runSearch(prefix) {
     return;
   }
 
-  if (!DB.length) await loadDB();
-  if (!DB.length) return;
+  // cancel prior in-flight
+  if (inFlight && inFlight.abort) inFlight.abort();
+  const ctrl = new AbortController();
+  inFlight = ctrl;
 
-  const hits = DB.filter(r => String(r.number).startsWith(prefix));
+  $btn.disabled = true;
+  setStatus('scanning…', '');
 
-  if (!hits.length) {
-    setStatus('no match', 'err');
-    $out.innerHTML = '<div class="empty">এই prefix-এ কোনো রেকর্ড পাওয়া যায়নি।</div>';
-    return;
+  try {
+    const res = await fetch('/api/lookup?q=' + encodeURIComponent(prefix), {
+      signal: ctrl.signal,
+      headers: { 'accept': 'application/json' }
+    });
+
+    if (res.status === 429) {
+      setStatus('rate limit — wait a minute', 'err');
+      $out.innerHTML = '<div class="error">অনেক বেশি চাহিদা। এক মিনিট পর আবার চেষ্টা করুন।</div>';
+      return;
+    }
+    if (!res.ok) {
+      let msg = 'HTTP ' + res.status;
+      try { const j = await res.json(); if (j.error) msg = j.error; } catch (_) {}
+      setStatus(msg, 'err');
+      return;
+    }
+
+    const data = await res.json();
+    const hits = Array.isArray(data.matches) ? data.matches : [];
+
+    if (!hits.length) {
+      setStatus('no match', 'err');
+      $out.innerHTML = '<div class="empty">এই prefix-এ কোনো রেকর্ড পাওয়া যায়নি।</div>';
+      return;
+    }
+
+    setStatus(hits.length + ' match' + (hits.length > 1 ? 'es' : '') + ' · prefix "' + prefix + '"', 'ok');
+
+    let html = hits.map(r => `
+      <div class="card">
+        <div class="row"><span class="label">number</span><span class="val">${highlight(r.number, prefix)}</span></div>
+        <div class="row"><span class="label">nid</span><span class="val nid">${escapeHtml(r.nid)}</span></div>
+        <div class="row"><span class="label">dob</span><span class="val dob">${escapeHtml(r.dob)}</span></div>
+      </div>
+    `).join('');
+
+    if (data.truncated) {
+      html += '<div class="more">showing first 100 &mdash; refine the prefix to narrow down</div>';
+    }
+    $out.innerHTML = html;
+  } catch (e) {
+    if (e.name === 'AbortError') return;
+    setStatus('network error', 'err');
+    $out.innerHTML = '<div class="error">' + escapeHtml(e.message) + '</div>';
+  } finally {
+    if (inFlight === ctrl) { inFlight = null; $btn.disabled = false; }
   }
-
-  setStatus(hits.length + ' match' + (hits.length > 1 ? 'es' : '') + ' · prefix "' + prefix + '"', 'ok');
-  renderCards(hits, prefix);
 }
 
-function escapeHtml(s) {
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[c]));
-}
-
-/* ---------- wire ---------- */
 $form.addEventListener('submit', e => { e.preventDefault(); runSearch($q.value); });
 
 $q.addEventListener('input', () => {
   $q.value = $q.value.replace(/\D/g, '').slice(0, 20);
   clearTimeout(debounceTimer);
-  debounceTimer = setTimeout(() => runSearch($q.value), 120);
+  debounceTimer = setTimeout(() => runSearch($q.value), 180);
 });
-
-loadDB();
 </script>
 </body>
 </html>
