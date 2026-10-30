@@ -1,6 +1,6 @@
 // api/lookup.js
-// Never require()s the data file — reads it with a lenient parser,
-// so a stray trailing comma can't crash the function.
+// Paginated prefix search + info endpoint (total DB count).
+// Dataset read with a lenient parser — broken JSON can't crash the function.
 
 const fs   = require('fs');
 const path = require('path');
@@ -13,7 +13,6 @@ function parseLoose(raw) {
   const cleaned = raw.replace(/,\s*(?=[}\]])/g, '');
   try { const v = JSON.parse(cleaned); if (Array.isArray(v)) return v; } catch (_) {}
 
-  // per-object rescue
   const out = [];
   let i = 0; const n = raw.length;
   while (i < n) {
@@ -42,15 +41,14 @@ function parseLoose(raw) {
   return out;
 }
 
-/* ---------- load once at cold start ---------- */
 let DB = [];
 let LOAD_INFO = '';
 
 (function init() {
   const candidates = [
-    path.join(__dirname, '_data', 'data.json'),                // bundled with fn
-    path.join(process.cwd(), 'api', '_data', 'data.json'),      // project root
-    path.join(process.cwd(), 'data.json')                       // last resort
+    path.join(__dirname, '_data', 'data.json'),
+    path.join(process.cwd(), 'api', '_data', 'data.json'),
+    path.join(process.cwd(), 'data.json')
   ];
 
   for (const file of candidates) {
@@ -73,13 +71,11 @@ let LOAD_INFO = '';
       LOAD_INFO += ' | ' + file + ': ' + e.message;
     }
   }
-
   LOAD_INFO = LOAD_INFO || 'no data file found in any candidate path';
 })();
 
-/* ---------- rate limit ---------- */
 const WINDOW_MS = 60_000;
-const MAX_REQ   = 30;
+const MAX_REQ   = 300;   // pagination friendly
 const buckets   = new Map();
 
 function rateLimited(ip) {
@@ -91,7 +87,6 @@ function rateLimited(ip) {
   return false;
 }
 
-/* ---------- plain Node response helper (no Vercel extensions needed) ---------- */
 function send(res, status, body) {
   res.statusCode = status;
   res.setHeader('content-type', 'application/json; charset=utf-8');
@@ -100,12 +95,10 @@ function send(res, status, body) {
   res.end(JSON.stringify(body));
 }
 
-/* ---------- handler ---------- */
 module.exports = function handler(req, res) {
   try {
     if (req.method !== 'GET') return send(res, 405, { error: 'method not allowed' });
 
-    // same-origin guard
     const origin  = req.headers.origin  || '';
     const referer = req.headers.referer || '';
     const host    = req.headers.host    || '';
@@ -113,7 +106,7 @@ module.exports = function handler(req, res) {
     const sameOrigin =
       (origin && site && origin === site) ||
       (referer && site && referer.startsWith(site + '/'));
-    if (!sameOrigin) return send(res, 403, { error: 'forbidden', hint: 'same-origin only' });
+    if (!sameOrigin) return send(res, 403, { error: 'forbidden' });
 
     const ip = (req.headers['x-forwarded-for'] || '').split(',')[0].trim()
             || (req.socket && req.socket.remoteAddress) || 'unknown';
@@ -122,37 +115,40 @@ module.exports = function handler(req, res) {
       return send(res, 429, { error: 'rate limit exceeded' });
     }
 
-    // dataset health
     if (!DB.length) {
-      return send(res, 503, {
-        error: 'dataset not loaded',
-        diagnostic: LOAD_INFO
-      });
+      return send(res, 503, { error: 'dataset not loaded', diagnostic: LOAD_INFO });
     }
 
-    // input
+    // info mode: return total DB count, no query
+    if (req.query && (req.query.info === '1' || req.query.info === 'true')) {
+      return send(res, 200, { total: DB.length });
+    }
+
     const q = String((req.query && req.query.q) || '').trim();
     if (!/^\d{3,20}$/.test(q)) return send(res, 400, { error: 'q must be 3–20 digits' });
 
-    // prefix search
+    const limit  = Math.min(Math.max(parseInt(req.query.limit,  10) || 100, 1), 500);
+    const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
+    let total_matches = 0;
     const matches = [];
-    const HARD_CAP = 100;
     for (let i = 0; i < DB.length; i++) {
       if (DB[i].number.startsWith(q)) {
-        matches.push(DB[i]);
-        if (matches.length >= HARD_CAP) break;
+        if (total_matches >= offset && matches.length < limit) matches.push(DB[i]);
+        total_matches++;
       }
     }
 
     return send(res, 200, {
-      count: matches.length,
-      truncated: matches.length >= HARD_CAP,
       query: q,
       total: DB.length,
+      total_matches,
+      offset,
+      limit,
+      count: matches.length,
       matches
     });
   } catch (e) {
-    // never throw — always JSON, so we can see the real cause
     return send(res, 500, {
       error: 'handler crash',
       message: e && e.message ? e.message : String(e),
